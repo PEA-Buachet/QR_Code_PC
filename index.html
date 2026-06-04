@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PC QR Code Scanner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .drag-over {
+            border-color: #3b82f6 !important;
+            background-color: #eff6ff !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+    <!-- Main Card (Added relative for absolute positioning of Reset button) -->
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6 md:p-8 relative">
+        
+        <!-- Reset Button -->
+        <button id="btnReset" class="absolute top-6 right-6 text-gray-400 hover:text-gray-700 flex items-center gap-1.5 text-sm font-medium transition-colors bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            เริ่มใหม่
+        </button>
+
+        <div class="text-center mb-8 mt-2">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 text-blue-600 mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                </svg>
+            </div>
+            <h1 class="text-2xl font-semibold text-gray-800">อ่าน QR Code สำหรับคอมพิวเตอร์</h1>
+            <p class="text-gray-500 mt-2">สแกนจากหน้าจอ วางรูปภาพ (Ctrl+V) หรืออัปโหลดไฟล์</p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+            <button id="btnCapture" class="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-xl transition-colors font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                จับภาพหน้าจอ (Share Screen)
+            </button>
+
+            <label class="flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-4 rounded-xl transition-colors cursor-pointer font-medium border border-gray-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                อัปโหลดรูปภาพ
+                <input type="file" id="fileInput" class="hidden" accept="image/*">
+            </label>
+        </div>
+
+        <!-- Drop & Preview Area -->
+        <div id="dropZone" class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center transition-colors mb-6 relative min-h-[200px] flex flex-col items-center justify-center group overflow-hidden">
+            <div id="placeholderText" class="text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mx-auto mb-2 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                <p class="text-sm mb-2">สำหรับ Windows 10 กดปุ่ม <kbd class="px-2 py-1 bg-gray-100 border rounded-md text-sm text-gray-600">⊞ Win</kbd> + <kbd class="px-2 py-1 bg-gray-100 border rounded-md text-sm text-gray-600">Shift</kbd> + <kbd class="px-2 py-1 bg-gray-100 border rounded-md text-sm text-gray-600">S</kbd> แล้ว</p>
+                <p>กด <kbd class="px-2 py-1 bg-gray-100 border rounded-md text-sm text-gray-600">Ctrl</kbd> + <kbd class="px-2 py-1 bg-gray-100 border rounded-md text-sm text-gray-600">V</kbd> เพื่อวางรูปภาพที่นี่</p>
+                <p class="text-sm mt-1">หรือลากไฟล์ภาพมาปล่อย</p>
+            </div>
+            <img id="imagePreview" class="hidden max-h-[300px] object-contain rounded shadow-sm z-10" alt="Preview">
+        </div>
+
+        <!-- Result Box -->
+        <div id="resultContainer" class="hidden bg-gray-50 border border-gray-200 rounded-xl p-4">
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-sm font-semibold text-gray-600">ผลลัพธ์การสแกน:</span>
+                <button id="btnCopy" class="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    คัดลอก
+                </button>
+            </div>
+            <div class="relative">
+                <textarea id="resultText" class="w-full bg-white border border-gray-300 rounded-lg p-3 text-gray-800 break-all resize-none focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3" readonly></textarea>
+                <div id="linkContainer" class="hidden mt-2">
+                    <a id="resultLink" href="#" target="_blank" class="inline-flex items-center gap-1 text-sm text-white bg-green-600 hover:bg-green-700 px-3 py-1.5 rounded-lg transition-colors">
+                        เปิดลิงก์นี้
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alert Message -->
+        <div id="alertMessage" class="hidden mt-4 p-3 rounded-lg text-sm text-center font-medium"></div>
+
+        <!-- Divider -->
+        <div class="my-8 border-t border-gray-200"></div>
+
+        <!-- Generator Section -->
+        <div class="text-center mb-6">
+            <h2 class="text-xl font-semibold text-gray-800">สร้าง QR Code</h2>
+            <p class="text-sm text-gray-500 mt-1">พิมพ์ข้อความหรือวางลิงก์ (URL) เพื่อสร้าง QR Code ของคุณเอง</p>
+        </div>
+        
+        <div class="flex flex-col sm:flex-row gap-3 mb-6">
+            <input type="text" id="qrInputText" class="flex-1 border border-gray-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="https://example.com หรือ ข้อความของคุณ">
+            <button id="btnGenerate" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-medium transition-colors sm:w-auto w-full whitespace-nowrap">
+                สร้าง QR Code
+            </button>
+        </div>
+        
+        <div id="qrOutputBox" class="hidden flex flex-col items-center border border-gray-200 rounded-xl p-6 bg-gray-50">
+            <div id="qrcodeContainer" class="bg-white p-4 rounded-xl shadow-sm mb-4 border border-gray-100 flex items-center justify-center min-w-[200px] min-h-[200px]"></div>
+            <button id="btnDownloadQr" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                ดาวน์โหลดรูปภาพ
+            </button>
+        </div>
+
+    </div>
+
+    <!-- Rainbow Footer -->
+    <div style="width:100%; text-align:center; margin-top:1.5rem; padding-bottom:1rem;">
+        <p class="rainbow-text" style="font-size:0.95rem; font-weight:500; letter-spacing:0.02em;">⚡️ Design &amp; System by PEA Buachet เขตชายแดน ⚡️</p>
+    </div>
+
+    <style>
+        @keyframes rainbow {
+            0%   { color: #ff0000; }
+            14%  { color: #ff8800; }
+            28%  { color: #ffee00; }
+            42%  { color: #00cc44; }
+            57%  { color: #0088ff; }
+            71%  { color: #8844ff; }
+            85%  { color: #ff44cc; }
+            100% { color: #ff0000; }
+        }
+        .rainbow-text {
+            animation: rainbow 5s linear infinite;
+            display: block;
+            text-align: center;
+        }
+    </style>
+
+    <script>
+        // DOM Elements
+        const btnCapture = document.getElementById('btnCapture');
+        const fileInput = document.getElementById('fileInput');
+        const dropZone = document.getElementById('dropZone');
+        const placeholderText = document.getElementById('placeholderText');
+        const imagePreview = document.getElementById('imagePreview');
+        const resultContainer = document.getElementById('resultContainer');
+        const resultText = document.getElementById('resultText');
+        const btnCopy = document.getElementById('btnCopy');
+        const btnReset = document.getElementById('btnReset');
+        const alertMessage = document.getElementById('alertMessage');
+        const linkContainer = document.getElementById('linkContainer');
+        const resultLink = document.getElementById('resultLink');
+
+        // Generator DOM Elements
+        const qrInputText = document.getElementById('qrInputText');
+        const btnGenerate = document.getElementById('btnGenerate');
+        const qrOutputBox = document.getElementById('qrOutputBox');
+        const qrcodeContainer = document.getElementById('qrcodeContainer');
+        const btnDownloadQr = document.getElementById('btnDownloadQr');
+
+        // Helper: Show Alert
+        function showAlert(msg, type = 'error') {
+            alertMessage.textContent = msg;
+            alertMessage.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-green-100', 'text-green-700', 'bg-yellow-100', 'text-yellow-700');
+            
+            if (type === 'error') alertMessage.classList.add('bg-red-100', 'text-red-700');
+            else if (type === 'success') alertMessage.classList.add('bg-green-100', 'text-green-700');
+            else if (type === 'warning') alertMessage.classList.add('bg-yellow-100', 'text-yellow-700');
+            
+            alertMessage.classList.remove('hidden');
+            setTimeout(() => alertMessage.classList.add('hidden'), 5000);
+        }
+
+        // Helper: Check if string is a URL
+        function isValidHttpUrl(string) {
+            let url;
+            try {
+                url = new URL(string);
+            } catch (_) {
+                return false;  
+            }
+            return url.protocol === "http:" || url.protocol === "https:";
+        }
+
+        // Reset Scanner Function
+        function resetScanner() {
+            imagePreview.src = '';
+            imagePreview.classList.add('hidden');
+            placeholderText.classList.remove('hidden');
+            resultContainer.classList.add('hidden');
+            resultText.value = '';
+            linkContainer.classList.add('hidden');
+            alertMessage.classList.add('hidden');
+            fileInput.value = '';
+
+            // ล้างส่วนสร้าง QR Code ด้วย
+            qrInputText.value = '';
+            qrcodeContainer.innerHTML = '';
+            qrOutputBox.classList.add('hidden');
+        }
+
+        // Bind Reset Button
+        btnReset.addEventListener('click', resetScanner);
+
+        // Core QR Scanner Function
+        function scanImage(imageSrc) {
+            resultContainer.classList.add('hidden');
+            
+            const img = new Image();
+            img.onload = () => {
+                // Show Preview
+                imagePreview.src = imageSrc;
+                imagePreview.classList.remove('hidden');
+                placeholderText.classList.add('hidden');
+
+                // Draw to Canvas to get ImageData
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                
+                // Decode QR
+                const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                    inversionAttempts: "dontInvert",
+                });
+
+                if (code) {
+                    resultText.value = code.data;
+                    resultContainer.classList.remove('hidden');
+                    
+                    // Check if result is a link
+                    if(isValidHttpUrl(code.data)) {
+                        resultLink.href = code.data;
+                        linkContainer.classList.remove('hidden');
+                    } else {
+                        linkContainer.classList.add('hidden');
+                    }
+                    
+                    showAlert('สแกน QR Code สำเร็จ!', 'success');
+                } else {
+                    showAlert('ไม่พบ QR Code หรือภาพไม่ชัดเจน กรุณาลองใหม่อีกครั้ง', 'warning');
+                }
+            };
+            img.src = imageSrc;
+        }
+
+        // 1. Screen Capture Logic (Improved for reliability)
+        btnCapture.addEventListener('click', async () => {
+            try {
+                // Request screen sharing
+                const stream = await navigator.mediaDevices.getDisplayMedia({ 
+                    video: { displaySurface: "browser" }, 
+                    audio: false 
+                });
+                
+                const video = document.createElement('video');
+                video.srcObject = stream;
+                
+                // Wait for metadata to ensure video dimensions are loaded
+                video.onloadedmetadata = () => {
+                    video.play();
+                };
+
+                // Wait for video to start playing
+                video.onplaying = () => {
+                    // Delay execution slightly to ensure the screen frame is fully rendered and not black
+                    setTimeout(() => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        
+                        // Stop all tracks to end screen sharing
+                        stream.getTracks().forEach(track => track.stop());
+                        
+                        // Pass to scanner
+                        scanImage(canvas.toDataURL('image/png'));
+                    }, 800); // 800ms delay
+                };
+
+            } catch (err) {
+                console.error(err);
+                // Ignore AbortError which happens when user clicks "Cancel" on the share screen prompt
+                if(err.name !== "NotAllowedError" && err.name !== "AbortError") {
+                    showAlert('เกิดข้อผิดพลาดในการจับภาพหน้าจอ: ' + err.message, 'error');
+                } else if (err.name === "NotAllowedError") {
+                    // This can happen if browser blocks screen share (e.g. strict iframe permissions)
+                    showAlert('ระบบไม่อนุญาตให้เข้าถึงหน้าจอ กรุณาใช้วิธีแคปรูปแล้ววาง (Ctrl+V) แทนครับ', 'warning');
+                }
+            }
+        });
+
+        // 2. File Upload Logic
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                scanImage(event.target.result);
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // 3. Paste from Clipboard Logic (Ctrl+V)
+        window.addEventListener('paste', (e) => {
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            let imageFound = false;
+            
+            for (let index in items) {
+                const item = items[index];
+                if (item.kind === 'file' && item.type.includes('image/')) {
+                    const blob = item.getAsFile();
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        scanImage(event.target.result);
+                    };
+                    reader.readAsDataURL(blob);
+                    imageFound = true;
+                }
+            }
+            
+            if(!imageFound) {
+                 showAlert('ไม่พบข้อมูลรูปภาพใน Clipboard', 'warning');
+            }
+        });
+
+        // 4. Drag and Drop Logic
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    scanImage(event.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Copy to clipboard
+        btnCopy.addEventListener('click', () => {
+            resultText.select();
+            document.execCommand('copy');
+            const originalText = btnCopy.innerHTML;
+            btnCopy.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg> คัดลอกแล้ว';
+            btnCopy.classList.remove('text-blue-600');
+            btnCopy.classList.add('text-green-600');
+            
+            setTimeout(() => {
+                btnCopy.innerHTML = originalText;
+                btnCopy.classList.add('text-blue-600');
+                btnCopy.classList.remove('text-green-600');
+            }, 2000);
+        });
+
+        // ==========================================
+        // Generator Logic
+        // ==========================================
+        btnGenerate.addEventListener('click', () => {
+            const text = qrInputText.value.trim();
+            if (!text) {
+                showAlert('กรุณาใส่ข้อความหรือลิงก์ก่อนกดสร้าง', 'warning');
+                return;
+            }
+            
+            // Clear previous QR
+            qrcodeContainer.innerHTML = '';
+            qrOutputBox.classList.remove('hidden');
+            
+            new QRCode(qrcodeContainer, {
+                text: text,
+                width: 200,
+                height: 200,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+            
+            showAlert('สร้าง QR Code สำเร็จ!', 'success');
+            
+            // เลื่อนหน้าจอลงมาที่ผลลัพธ์
+            qrOutputBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+
+        // Download QR Logic
+        btnDownloadQr.addEventListener('click', () => {
+            let img = qrcodeContainer.querySelector('img');
+            let canvas = qrcodeContainer.querySelector('canvas');
+            let dataUrl = null;
+
+            if (img && img.src && img.src.startsWith('data:image')) {
+                dataUrl = img.src;
+            } else if (canvas) {
+                dataUrl = canvas.toDataURL("image/png");
+            }
+
+            if (dataUrl) {
+                const link = document.createElement('a');
+                link.href = dataUrl;
+                link.download = 'generated_qrcode.png';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } else {
+                showAlert('ไม่สามารถดาวน์โหลดได้ กรุณาลองสร้างใหม่อีกครั้ง', 'error');
+            }
+        });
+
+    </script>
+</body>
+</html>
