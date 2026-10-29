@@ -190,7 +190,14 @@
                 </button>
             </div>
         </div>
-        
+
+        <!-- Logo Size Slider (แสดงเมื่อมีโลโก้) -->
+        <div id="logoSizeBox" class="hidden items-center gap-3 mb-6">
+            <span class="text-sm text-gray-600 whitespace-nowrap">ขนาดโลโก้</span>
+            <input type="range" id="logoSizeRange" min="15" max="35" value="27" class="flex-1 cursor-pointer" style="accent-color: var(--accent-hover)">
+            <span id="logoSizeValue" class="text-sm text-gray-500 w-12 text-right">27%</span>
+        </div>
+
         <div id="qrOutputBox" class="hidden flex flex-col items-center border border-gray-200 rounded-xl p-6 bg-gray-50">
             <div id="qrcodeContainer" class="bg-white p-4 rounded-xl shadow-sm mb-4 border border-gray-100 flex items-center justify-center min-w-[200px] min-h-[200px]"></div>
             <button id="btnDownloadQr" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
@@ -253,9 +260,14 @@
         const logoPreviewBox = document.getElementById('logoPreviewBox');
         const logoPreview = document.getElementById('logoPreview');
         const btnRemoveLogo = document.getElementById('btnRemoveLogo');
+        const logoSizeBox = document.getElementById('logoSizeBox');
+        const logoSizeRange = document.getElementById('logoSizeRange');
+        const logoSizeValue = document.getElementById('logoSizeValue');
 
         // Holds the uploaded logo as an Image object (null = no logo)
         let logoImage = null;
+        // สัดส่วนขนาดโลโก้เทียบกับ QR (ปรับได้ด้วยแถบเลื่อน)
+        let logoScale = 0.27;
 
         // Helper: Show Alert
         function showAlert(msg, type = 'error') {
@@ -309,6 +321,8 @@
             logoInput.value = '';
             logoPreview.src = '';
             logoPreviewBox.classList.add('hidden');
+            logoSizeBox.classList.add('hidden');
+            logoSizeBox.classList.remove('flex');
         }
 
         logoInput.addEventListener('change', (e) => {
@@ -321,6 +335,8 @@
                     logoImage = img;
                     logoPreview.src = event.target.result;
                     logoPreviewBox.classList.remove('hidden');
+                    logoSizeBox.classList.remove('hidden');
+                    logoSizeBox.classList.add('flex');
                     // ถ้ามี QR อยู่แล้ว ให้สร้างใหม่พร้อมโลโก้ทันที
                     if (!qrOutputBox.classList.contains('hidden') && qrInputText.value.trim()) {
                         generateQr();
@@ -339,14 +355,23 @@
             }
         });
 
+        // แถบเลื่อนปรับขนาดโลโก้
+        logoSizeRange.addEventListener('input', () => {
+            logoScale = parseInt(logoSizeRange.value, 10) / 100;
+            logoSizeValue.textContent = logoSizeRange.value + '%';
+            if (logoImage && !qrOutputBox.classList.contains('hidden') && qrInputText.value.trim()) {
+                generateQr();
+            }
+        });
+
         // วาดโลโก้ลงกลาง QR (บน canvas ของ qrcodejs)
         function overlayLogoOnCanvas(canvas) {
             if (!logoImage) return;
             const ctx = canvas.getContext('2d');
             const size = canvas.width;
-            const logoSize = Math.round(size * 0.22);   // โลโก้ ~22% ของ QR
-            const pos = Math.round((size - logoSize) / 2);
-            const pad = Math.round(logoSize * 0.14);     // ขอบขาวรอบโลโก้
+            const logoSize = Math.round(size * logoScale);   // ขนาดโลโก้ตามแถบเลื่อน (อยู่กึ่งกลางเสมอ)
+            const pos = Math.round((size - logoSize) / 2);   // กึ่งกลางแนวนอน/แนวตั้ง
+            const pad = Math.round(logoSize * 0.12);     // ขอบขาวรอบโลโก้
             const radius = Math.round(logoSize * 0.18);
 
             // พื้นหลังขาวมุมมน เพื่อให้โลโก้เด่นและ QR ยังสแกนได้
