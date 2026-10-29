@@ -1,3 +1,4 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -9,20 +10,60 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --accent: #93c5fd;
+            --accent-hover: #3b82f6;
+            --accent-soft: #dbeafe;
+        }
         body {
             font-family: 'Prompt', sans-serif;
             background-color: #f3f4f6;
+            transition: background-color .3s ease, color .3s ease;
         }
         .drag-over {
-            border-color: #3b82f6 !important;
-            background-color: #eff6ff !important;
+            border-color: var(--accent-hover) !important;
+            background-color: var(--accent-soft) !important;
         }
+
+        /* Accent-driven elements (ใช้สีพาสเทลที่เลือก) */
+        .btn-accent { background-color: var(--accent) !important; color: #fff !important; }
+        .btn-accent:hover { background-color: var(--accent-hover) !important; }
+        .accent-icon { background-color: var(--accent-soft) !important; color: var(--accent-hover) !important; }
+        .accent-soft-box { background-color: var(--accent-soft) !important; border-color: var(--accent) !important; }
+
+        /* ปุ่มเลือกสีพาสเทล */
+        .swatch { width: 26px; height: 26px; border-radius: 9999px; border: 2px solid rgba(0,0,0,.08); cursor: pointer; transition: transform .15s ease; padding: 0; }
+        .swatch:hover { transform: scale(1.12); }
+        .swatch.active { box-shadow: 0 0 0 3px var(--accent-hover); border-color: #fff; }
+
+        /* ===== Dark mode ===== */
+        body.dark { background-color: #0f172a !important; }
+        body.dark .theme-card { background-color: #1e293b !important; }
+        body.dark h1, body.dark h2 { color: #f1f5f9 !important; }
+        body.dark .text-gray-800 { color: #f1f5f9 !important; }
+        body.dark .text-gray-700 { color: #e2e8f0 !important; }
+        body.dark .text-gray-600 { color: #cbd5e1 !important; }
+        body.dark .text-gray-500 { color: #94a3b8 !important; }
+        body.dark .text-gray-400 { color: #94a3b8 !important; }
+        body.dark .bg-gray-50 { background-color: #0f172a !important; }
+        body.dark .bg-gray-100 { background-color: #334155 !important; color: #e2e8f0 !important; }
+        body.dark .hover\:bg-gray-100:hover { background-color: #475569 !important; }
+        body.dark .hover\:bg-gray-200:hover { background-color: #475569 !important; }
+        body.dark .border-gray-100 { border-color: #334155 !important; }
+        body.dark .border-gray-200 { border-color: #334155 !important; }
+        body.dark .border-gray-300 { border-color: #475569 !important; }
+        body.dark input, body.dark textarea { background-color: #0f172a !important; color: #e5e7eb !important; border-color: #475569 !important; }
+        body.dark kbd { background-color: #334155 !important; color: #e2e8f0 !important; border-color: #475569 !important; }
+        body.dark .accent-icon { color: #fff !important; background-color: var(--accent-hover) !important; }
+        body.dark .accent-soft-box { background-color: rgba(255,255,255,.06) !important; }
+        /* คง QR frame เป็นสีขาวเสมอ เพื่อให้สแกนติด */
+        body.dark #qrcodeContainer { background-color: #ffffff !important; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4">
 
     <!-- Main Card (Added relative for absolute positioning of Reset button) -->
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6 md:p-8 relative">
+    <div class="theme-card bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6 md:p-8 relative">
         
         <!-- Reset Button -->
         <button id="btnReset" class="absolute top-6 right-6 text-gray-400 hover:text-gray-700 flex items-center gap-1.5 text-sm font-medium transition-colors bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200">
@@ -32,8 +73,21 @@
             เริ่มใหม่
         </button>
 
+        <!-- Theme Controls: สีพาสเทล + Dark mode -->
+        <div class="flex flex-wrap items-center gap-2 mb-6 pr-24">
+            <span class="text-xs text-gray-400 mr-1">ธีมสีพาสเทล:</span>
+            <button type="button" class="swatch" data-a="#93c5fd" data-h="#3b82f6" data-s="#dbeafe" title="ฟ้าพาสเทล" style="background:#93c5fd"></button>
+            <button type="button" class="swatch" data-a="#f9a8d4" data-h="#ec4899" data-s="#fce7f3" title="ชมพูพาสเทล" style="background:#f9a8d4"></button>
+            <button type="button" class="swatch" data-a="#6ee7b7" data-h="#10b981" data-s="#d1fae5" title="เขียวมิ้นต์" style="background:#6ee7b7"></button>
+            <button type="button" class="swatch" data-a="#c4b5fd" data-h="#8b5cf6" data-s="#ede9fe" title="ม่วงพาสเทล" style="background:#c4b5fd"></button>
+            <button type="button" class="swatch" data-a="#fdba74" data-h="#f97316" data-s="#ffedd5" title="ส้มพีช" style="background:#fdba74"></button>
+            <button id="btnDarkToggle" type="button" class="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-3 py-1.5 rounded-lg border border-gray-200 transition-colors ml-2">
+                <span id="darkIcon">🌙</span><span id="darkLabel">Dark</span>
+            </button>
+        </div>
+
         <div class="text-center mb-8 mt-2">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 text-blue-600 mb-4">
+            <div class="accent-icon inline-flex items-center justify-center w-16 h-16 rounded-full mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
                 </svg>
@@ -44,7 +98,7 @@
 
         <!-- Action Buttons -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-            <button id="btnCapture" class="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-xl transition-colors font-medium">
+            <button id="btnCapture" class="btn-accent flex items-center justify-center gap-2 text-white py-3 px-4 rounded-xl transition-colors font-medium">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
@@ -109,11 +163,32 @@
             <p class="text-sm text-gray-500 mt-1">พิมพ์ข้อความหรือวางลิงก์ (URL) เพื่อสร้าง QR Code ของคุณเอง</p>
         </div>
         
-        <div class="flex flex-col sm:flex-row gap-3 mb-6">
+        <div class="flex flex-col sm:flex-row gap-3 mb-4">
             <input type="text" id="qrInputText" class="flex-1 border border-gray-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="https://example.com หรือ ข้อความของคุณ">
-            <button id="btnGenerate" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-medium transition-colors sm:w-auto w-full whitespace-nowrap">
+            <button id="btnGenerate" class="btn-accent text-white px-6 py-3 rounded-xl font-medium transition-colors sm:w-auto w-full whitespace-nowrap">
                 สร้าง QR Code
             </button>
+        </div>
+
+        <!-- Logo Upload for QR -->
+        <div class="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
+            <label class="flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 px-4 rounded-xl transition-colors cursor-pointer font-medium border border-gray-300 text-sm whitespace-nowrap">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                แนบรูปภาพหรือโลโก้ใน QR
+                <input type="file" id="logoInput" class="hidden" accept="image/*">
+            </label>
+
+            <div id="logoPreviewBox" class="accent-soft-box hidden flex items-center gap-2 border rounded-xl px-3 py-2">
+                <img id="logoPreview" class="h-9 w-9 object-contain rounded bg-white border border-gray-200" alt="logo">
+                <span class="text-sm text-gray-600">เพิ่มโลโก้แล้ว</span>
+                <button id="btnRemoveLogo" class="text-red-500 hover:text-red-700 ml-1" title="ลบโลโก้">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
         </div>
         
         <div id="qrOutputBox" class="hidden flex flex-col items-center border border-gray-200 rounded-xl p-6 bg-gray-50">
@@ -173,6 +248,15 @@
         const qrcodeContainer = document.getElementById('qrcodeContainer');
         const btnDownloadQr = document.getElementById('btnDownloadQr');
 
+        // Logo DOM Elements
+        const logoInput = document.getElementById('logoInput');
+        const logoPreviewBox = document.getElementById('logoPreviewBox');
+        const logoPreview = document.getElementById('logoPreview');
+        const btnRemoveLogo = document.getElementById('btnRemoveLogo');
+
+        // Holds the uploaded logo as an Image object (null = no logo)
+        let logoImage = null;
+
         // Helper: Show Alert
         function showAlert(msg, type = 'error') {
             alertMessage.textContent = msg;
@@ -212,6 +296,73 @@
             qrInputText.value = '';
             qrcodeContainer.innerHTML = '';
             qrOutputBox.classList.add('hidden');
+
+            // ล้างโลโก้ด้วย
+            clearLogo();
+        }
+
+        // ==========================================
+        // Logo Handling
+        // ==========================================
+        function clearLogo() {
+            logoImage = null;
+            logoInput.value = '';
+            logoPreview.src = '';
+            logoPreviewBox.classList.add('hidden');
+        }
+
+        logoInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    logoImage = img;
+                    logoPreview.src = event.target.result;
+                    logoPreviewBox.classList.remove('hidden');
+                    // ถ้ามี QR อยู่แล้ว ให้สร้างใหม่พร้อมโลโก้ทันที
+                    if (!qrOutputBox.classList.contains('hidden') && qrInputText.value.trim()) {
+                        generateQr();
+                    }
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        btnRemoveLogo.addEventListener('click', () => {
+            clearLogo();
+            // สร้าง QR ใหม่แบบไม่มีโลโก้ ถ้ามีข้อความอยู่
+            if (!qrOutputBox.classList.contains('hidden') && qrInputText.value.trim()) {
+                generateQr();
+            }
+        });
+
+        // วาดโลโก้ลงกลาง QR (บน canvas ของ qrcodejs)
+        function overlayLogoOnCanvas(canvas) {
+            if (!logoImage) return;
+            const ctx = canvas.getContext('2d');
+            const size = canvas.width;
+            const logoSize = Math.round(size * 0.22);   // โลโก้ ~22% ของ QR
+            const pos = Math.round((size - logoSize) / 2);
+            const pad = Math.round(logoSize * 0.14);     // ขอบขาวรอบโลโก้
+            const radius = Math.round(logoSize * 0.18);
+
+            // พื้นหลังขาวมุมมน เพื่อให้โลโก้เด่นและ QR ยังสแกนได้
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            const x = pos - pad, y = pos - pad, w = logoSize + pad * 2, h = logoSize + pad * 2;
+            ctx.moveTo(x + radius, y);
+            ctx.arcTo(x + w, y, x + w, y + h, radius);
+            ctx.arcTo(x + w, y + h, x, y + h, radius);
+            ctx.arcTo(x, y + h, x, y, radius);
+            ctx.arcTo(x, y, x + w, y, radius);
+            ctx.closePath();
+            ctx.fill();
+
+            // วาดโลโก้
+            ctx.drawImage(logoImage, pos, pos, logoSize, logoSize);
         }
 
         // Bind Reset Button
@@ -388,42 +539,58 @@
         // ==========================================
         // Generator Logic
         // ==========================================
-        btnGenerate.addEventListener('click', () => {
+        function generateQr() {
             const text = qrInputText.value.trim();
             if (!text) {
                 showAlert('กรุณาใส่ข้อความหรือลิงก์ก่อนกดสร้าง', 'warning');
                 return;
             }
-            
+
             // Clear previous QR
             qrcodeContainer.innerHTML = '';
             qrOutputBox.classList.remove('hidden');
-            
+
+            // ใช้ความละเอียดสูงขึ้นเพื่อให้โลโก้คมและดาวน์โหลดสวย
             new QRCode(qrcodeContainer, {
                 text: text,
-                width: 200,
-                height: 200,
+                width: 400,
+                height: 400,
                 colorDark : "#000000",
                 colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.H
+                correctLevel : QRCode.CorrectLevel.H   // H = กู้คืนได้สูงสุด รองรับการบังโลโก้
             });
-            
-            showAlert('สร้าง QR Code สำเร็จ!', 'success');
-            
-            // เลื่อนหน้าจอลงมาที่ผลลัพธ์
-            qrOutputBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        });
+
+            // qrcodejs อาจสร้างทั้ง <canvas> และ <img> — จัดการให้เหลือ canvas อันเดียวที่แสดงผล
+            setTimeout(() => {
+                const canvas = qrcodeContainer.querySelector('canvas');
+                const extraImg = qrcodeContainer.querySelector('img');
+                if (extraImg) extraImg.remove();
+
+                if (canvas) {
+                    canvas.style.display = 'block';
+                    canvas.style.width = '220px';
+                    canvas.style.height = '220px';
+                    overlayLogoOnCanvas(canvas);
+                }
+
+                showAlert('สร้าง QR Code สำเร็จ!', 'success');
+                qrOutputBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 60);
+        }
+
+        btnGenerate.addEventListener('click', generateQr);
 
         // Download QR Logic
         btnDownloadQr.addEventListener('click', () => {
-            let img = qrcodeContainer.querySelector('img');
             let canvas = qrcodeContainer.querySelector('canvas');
+            let img = qrcodeContainer.querySelector('img');
             let dataUrl = null;
 
-            if (img && img.src && img.src.startsWith('data:image')) {
-                dataUrl = img.src;
-            } else if (canvas) {
+            // ให้ความสำคัญกับ canvas ก่อน เพราะมีโลโก้วาดอยู่บนนั้น
+            if (canvas) {
                 dataUrl = canvas.toDataURL("image/png");
+            } else if (img && img.src && img.src.startsWith('data:image')) {
+                dataUrl = img.src;
             }
 
             if (dataUrl) {
@@ -438,6 +605,54 @@
             }
         });
 
+        // ==========================================
+        // Theme: Dark mode + ปุ่มสีพาสเทล
+        // ==========================================
+        (function () {
+            const body = document.body;
+            const btnDark = document.getElementById('btnDarkToggle');
+            const darkIcon = document.getElementById('darkIcon');
+            const darkLabel = document.getElementById('darkLabel');
+            const swatches = document.querySelectorAll('.swatch');
+
+            function applyAccent(a, h, s) {
+                const root = document.documentElement;
+                root.style.setProperty('--accent', a);
+                root.style.setProperty('--accent-hover', h);
+                root.style.setProperty('--accent-soft', s);
+                swatches.forEach(sw => sw.classList.toggle('active', sw.dataset.a === a));
+                try { localStorage.setItem('qr-accent', JSON.stringify({ a, h, s })); } catch (e) {}
+            }
+
+            function applyDark(on) {
+                body.classList.toggle('dark', on);
+                if (darkIcon) darkIcon.textContent = on ? '☀️' : '🌙';
+                if (darkLabel) darkLabel.textContent = on ? 'Light' : 'Dark';
+                try { localStorage.setItem('qr-dark', on ? '1' : '0'); } catch (e) {}
+            }
+
+            swatches.forEach(sw => {
+                sw.addEventListener('click', () => applyAccent(sw.dataset.a, sw.dataset.h, sw.dataset.s));
+            });
+            if (btnDark) btnDark.addEventListener('click', () => applyDark(!body.classList.contains('dark')));
+
+            // คืนค่าที่เคยเลือกไว้ (เฉพาะเบราว์เซอร์นี้)
+            try {
+                if (localStorage.getItem('qr-dark') === '1') applyDark(true);
+                const savedAccent = JSON.parse(localStorage.getItem('qr-accent') || 'null');
+                if (savedAccent && savedAccent.a) {
+                    applyAccent(savedAccent.a, savedAccent.h, savedAccent.s);
+                } else {
+                    const first = document.querySelector('.swatch');
+                    if (first) first.classList.add('active');
+                }
+            } catch (e) {
+                const first = document.querySelector('.swatch');
+                if (first) first.classList.add('active');
+            }
+        })();
+
     </script>
 </body>
 </html>
+</body></html>
