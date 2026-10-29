@@ -368,6 +368,9 @@
         function overlayLogoOnCanvas(canvas) {
             if (!logoImage) return;
             const ctx = canvas.getContext('2d');
+            // เปิดการย่อภาพแบบคุณภาพสูง เพื่อให้โลโก้คมขึ้นเวลาถูกย่อ
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
             const size = canvas.width;
             const logoSize = Math.round(size * logoScale);   // ขนาดโลโก้ตามแถบเลื่อน (อยู่กึ่งกลางเสมอ)
             const pos = Math.round((size - logoSize) / 2);   // กึ่งกลางแนวนอน/แนวตั้ง
@@ -578,8 +581,8 @@
             // ใช้ความละเอียดสูงขึ้นเพื่อให้โลโก้คมและดาวน์โหลดสวย
             new QRCode(qrcodeContainer, {
                 text: text,
-                width: 400,
-                height: 400,
+                width: 800,
+                height: 800,            // เรนเดอร์ความละเอียดสูง → โลโก้/QR คมขึ้นและดาวน์โหลดชัด
                 colorDark : "#000000",
                 colorLight : "#ffffff",
                 correctLevel : QRCode.CorrectLevel.H   // H = กู้คืนได้สูงสุด รองรับการบังโลโก้
